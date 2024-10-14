@@ -49,8 +49,14 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { firstName, email, password, confirmPassword } = data;
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+
     if (firstName && email && password && confirmPassword) {
-      if (password === confirmPassword) {
+      if (!passwordRegex.test(password)) {
+        toast.error(
+          "Password must be at least 8 characters long and include at least one numeric value and one special character"
+        );
+      } else if (password === confirmPassword) {
         const fetchData = await fetch(
           `${process.env.REACT_APP_SERVER_DOMIN}/Signup`,
           {
@@ -69,12 +75,13 @@ const Signup = () => {
           navigate("/login");
         }
       } else {
-        toast.error("Password and Confirm Password should be same");
+        toast.error("Password and Confirm Password should be the same");
       }
     } else {
       toast.error("Please fill all the fields");
     }
   };
+
   return (
     <div className="p-3 md:p-4">
       <div className="w-full max-w-sm bg-white m-auto flex  flex-col p-4">
