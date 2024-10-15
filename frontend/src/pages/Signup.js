@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import loginSignupImage from "../assest/login-animation.gif";
+``;
 import { BiShow, BiHide } from "react-icons/bi";
 import { Link, useNavigate } from "react-router-dom";
 import { BsEmojiSmileUpsideDown } from "react-icons/bs";
@@ -46,6 +47,7 @@ const Signup = () => {
     });
   };
   console.log(process.env.REACT_APP_SERVER_DOMIN);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { firstName, email, password, confirmPassword } = data;

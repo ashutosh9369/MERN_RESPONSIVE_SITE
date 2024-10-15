@@ -23,6 +23,7 @@ const Login = () => {
   const handleShowPassword = () => {
     setShowPassword((preve) => !preve);
   };
+
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData((preve) => {
@@ -32,6 +33,7 @@ const Login = () => {
       };
     });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = data;
@@ -46,10 +48,11 @@ const Login = () => {
           body: JSON.stringify(data),
         }
       );
-      const dataRes = await fetchData.json();
-      console.log(dataRes);
 
-      toast.success(dataRes.message);
+      const dataRes = await fetchData.json();
+      // console.log(dataRes);
+
+      toast(dataRes.message);
 
       if (dataRes.alert) {
         dispatch(loginRedux(dataRes));
@@ -95,6 +98,13 @@ const Login = () => {
               {showPassword ? <BiShow /> : <BiHide />}
             </span>
           </div>
+
+          <p className="text-sm mt-2">
+            Forgot your password?{" "}
+            <Link to={"/ForgotPassword"} className="text-blue-600 underline">
+              Reset Password
+            </Link>
+          </p>
 
           <button className="max-w-[150px] m-auto rounded-full w-full bg-red-500 hover:bg-red-600 cursor-pointer text-white text-xl font-medium text-center py-1 mt-4">
             Login
