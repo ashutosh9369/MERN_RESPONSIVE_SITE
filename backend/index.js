@@ -3,6 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv").config();
 const Stripe = require("stripe");
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(cors());
@@ -42,45 +43,97 @@ app.get("/", (req, res) => {
 //Sign Up
 app.post("/Signup", async (req, res) => {
   // console.log(req.body);
-  const { email } = req.body;
+  const { email, password, ...rest } = req.body;
 
-  const data = await userModel.findOne({ email: email });
+  const existingUser = await userModel.findOne({ email: email });
 
-  if (!data) {
-    // If the email is not found in the database, create a new user
-    const newUser = new userModel(req.body);
+  if (!existingUser) {
+    // Hash password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new userModel({ email, password: hashedPassword, ...rest });
     await newUser.save();
     res.send({ message: "Successfully Signed Up", alert: true });
   } else {
-    // If the email is already registered
     res.send({ message: "Email Id is already registered", alert: false });
   }
+
+  // const data = await userModel.findOne({ email: email });
+
+  // if (!data) {
+  //   // If the email is not found in the database, create a new user
+  //   const newUser = new userModel(req.body);
+  //   await newUser.save();
+  //   res.send({ message: "Successfully Signed Up", alert: true });
+  // } else {
+  //   // If the email is already registered
+  //   res.send({ message: "Email Id is already registered", alert: false });
+  // }
 });
 
 //login
 app.post("/login", async (req, res) => {
   // console.log(req.body);
   const { email, password } = req.body;
-  const data = await userModel.findOne({ email: email, password: password });
+  const user = await userModel.findOne({ email: email });
 
-  if (data) {
-    // If the email is already registered
-
-    const dataSend = {
-      _id: data._id,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      password: data.password,
-      image: data.image,
-    };
-    console.log(dataSend);
-    res.send({ message: "Login successfully", alert: true, data: dataSend });
+  if (user) {
+    // Compare hashed password
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (passwordMatch) {
+      const dataSend = {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        image: user.image,
+      };
+      res.send({ message: "Login successfully", alert: true, data: dataSend });
+    } else {
+      res.send({ message: "Incorrect password", alert: false });
+    }
   } else {
-    res.send({
-      message: "This email is not registered or wrong password",
-      alert: false,
-    });
+    res.send({ message: "This email is not registered", alert: false });
+  }
+  // if (data) {
+  //   // If the email is already registered
+
+  //   const dataSend = {
+  //     _id: data._id,
+  //     firstName: data.firstName,
+  //     lastName: data.lastName,
+  //     email: data.email,
+  //     password: data.password,
+  //     image: data.image,
+  //   };
+  //   console.log(dataSend);
+  //   res.send({ message: "Login successfully", alert: true, data: dataSend });
+  // } else {
+  //   res.send({
+  //     message: "This email is not registered or wrong password",
+  //     alert: false,
+  //   });
+  // }
+});
+
+// Password Reset
+
+app.post("/reset-password", async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Hash the new password before saving
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: "Password reset successful, Now go to login page..." });
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred", error });
   }
 });
 
